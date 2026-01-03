@@ -24,11 +24,13 @@ def list_open_prs(owner, repo):
         token = os.environ.get('GH_TOKEN') or os.environ.get('GITHUB_TOKEN')
         
         if token:
-            cmd = ["curl", "-s", "-H", f"Authorization: token {token}", api_url]
+            # Use stdin to pass the header to avoid token exposure in process list
+            cmd = ["curl", "-s", "-H", "@-", api_url]
+            header = f"Authorization: token {token}"
+            result = subprocess.run(cmd, input=header, capture_output=True, text=True, check=True)
         else:
             cmd = ["curl", "-s", api_url]
-        
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
         
         prs = json.loads(result.stdout)
         
